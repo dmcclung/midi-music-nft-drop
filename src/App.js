@@ -11,7 +11,7 @@ const App = () => {
     <div className="App">
       <div className="container">
         <div className="header-container">
-          <p className="header">🍭 Candy Drop</p>
+          <p className="header">🎵 Midi Music NFT Drop</p>
           <p className="sub-text">NFT drop machine with fair mint</p>
         </div>
         <div className="footer-container">
