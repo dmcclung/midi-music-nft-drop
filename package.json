@@ -13,6 +13,8 @@
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.3",
+    "scribbletune": "^5.0.0-alpha.2",
+    "text2png": "^2.3.0",
     "web-vitals": "^1.0.1"
   },
   "scripts": {
