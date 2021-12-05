@@ -24,6 +24,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "create-assets": "rm -rf assets && mkdir assets && ts-node createAssets.ts",
+    "clean-upload": "rm -rf .cache",
     "upload-assets": "ts-node ../metaplex/js/packages/cli/src/candy-machine-cli.ts upload ./assets --env devnet --keypair ~/.config/solana/id.json",
     "verify-assets": "ts-node ../metaplex/js/packages/cli/src/candy-machine-cli.ts verify --keypair ~/.config/solana/id.json"
   },
