@@ -1,12 +1,8 @@
-import { writeFileSync } from 'fs'
+import { readFileSync, writeFileSync } from 'fs'
 import { range } from 'lodash'
 import * as scribble from 'scribbletune'
 import text2png from 'text2png'
-
-const numNfts = range(0, 3)
-console.dir(numNfts)
-
-console.log('Creating NFT assets...')
+import * as IPFS from 'ipfs-core'
 
 const root = 'B2';
 const scale = 'minor';
@@ -20,10 +16,7 @@ const getRandomPattern = (count = 8) => {
   return str
 }
 
-numNfts.forEach(n => {
-
-  const pattern = getRandomPattern()
-
+const createMidi = (pattern) => {
   const clipA = scribble.clip({
     notes: root,
     randomNotes: scribble.arp(
@@ -42,35 +35,64 @@ numNfts.forEach(n => {
     subdiv: '16n',
   })
 
-  scribble.midi([].concat(clipA, clipA, clipA, clipB), `assets/${n}.mid`)
+  return scribble.midi([].concat(clipA, clipA, clipA, clipB), null)
+}
 
-  const png = text2png(pattern, {
-    color: 'blue',
-    backgroundColor: 'white' 
-  })
-
-  writeFileSync(`assets/${n}.png`, png)
-
-  const json = {
-    "name": `Midi Audio NFT #${n}`,
-    "symbol": "MIDI",
-    "image": `${n}.png`,
-    "properties": {
-      "files": [
-        {
-          "uri": `${n}.png`,
-          "type": "image/png"
-        }
-      ],
-      "creators": [
-        {
-          "address": "Br7YiN2PkG7JeSEreHRfzuXtU6TJUiAUswqoCoqvt2b4",
-          "share": 100
-        }
-      ]
+const createAssets = async (ipfs) => {
+  console.log('Creating NFT assets...')
+  const nfts = range(0, 3)
+  for (let n = 0; n < nfts.length; n++) {
+    const pattern = getRandomPattern()
+    const midiBuffer = createMidi(pattern)
+    if (!midiBuffer) {
+      throw new Error('Error creating midi')
     }
+    writeFileSync(`assets/${n}.mid`, Buffer.from(midiBuffer.toString()))
+
+    const assetsMidi = readFileSync(`assets/${n}.mid`)
+    
+    const { cid } = await ipfs.add(midiBuffer.toString())
+    console.log('Stored in ipfs', cid)
+
+    const png = text2png(pattern, {
+      color: 'blue',
+      backgroundColor: 'white'
+    })
+
+    writeFileSync(`assets/${n}.png`, png)
+
+    const json = {
+      "name": `Midi Audio NFT #${n}`,
+      "symbol": "MIDI",
+      "image": `${n}.png`,
+      "properties.category": "audio",
+      "properties": {
+        "files": [
+          {
+            "uri": `${n}.png`,
+            "type": "image/png"
+          },
+          {
+            "uri": `${cid}`,
+            "type": "audio/midi"
+          }
+        ],
+        "creators": [
+          {
+            "address": "Br7YiN2PkG7JeSEreHRfzuXtU6TJUiAUswqoCoqvt2b4",
+            "share": 100
+          }
+        ]
+      }
+    }
+
+    writeFileSync(`assets/${n}.json`, JSON.stringify(json))
   }
+}
 
-  writeFileSync(`assets/${n}.json`, JSON.stringify(json))
+const initIpfs = async () => {
+  const ipfs = await IPFS.create()
+  await createAssets(ipfs)
+}
 
-})
+initIpfs().then(() => process.exit(0)).catch(err => console.log(err))

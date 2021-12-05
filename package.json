@@ -9,6 +9,7 @@
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
+    "ipfs-core": "^0.12.2",
     "lodash": "^4.17.21",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
@@ -22,7 +23,9 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "create-assets": "rm -rf assets && mkdir assets && ts-node createAssets.ts"
+    "create-assets": "rm -rf assets && mkdir assets && ts-node createAssets.ts",
+    "upload-assets": "ts-node ../metaplex/js/packages/cli/src/candy-machine-cli.ts upload ./assets --env devnet --keypair ~/.config/solana/id.json",
+    "verify-assets": "ts-node ../metaplex/js/packages/cli/src/candy-machine-cli.ts verify --keypair ~/.config/solana/id.json"
   },
   "eslintConfig": {
     "extends": [
