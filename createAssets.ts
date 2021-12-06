@@ -2,7 +2,6 @@ import { readFileSync, writeFileSync } from 'fs'
 import { range } from 'lodash'
 import * as scribble from 'scribbletune'
 import text2png from 'text2png'
-import * as IPFS from 'ipfs-core'
 
 const root = 'B2';
 const scale = 'minor';
@@ -16,7 +15,7 @@ const getRandomPattern = (count = 8) => {
   return str
 }
 
-const createMidi = (pattern) => {
+const createMidi = (filename, pattern) => {
   const clipA = scribble.clip({
     notes: root,
     randomNotes: scribble.arp(
@@ -35,24 +34,15 @@ const createMidi = (pattern) => {
     subdiv: '16n',
   })
 
-  return scribble.midi([].concat(clipA, clipA, clipA, clipB), null)
+  return scribble.midi([].concat(clipA, clipA, clipA, clipB), filename)
 }
 
-const createAssets = async (ipfs) => {
+const createAssets = async () => {
   console.log('Creating NFT assets...')
   const nfts = range(0, 3)
   for (let n = 0; n < nfts.length; n++) {
     const pattern = getRandomPattern()
-    const midiBuffer = createMidi(pattern)
-    if (!midiBuffer) {
-      throw new Error('Error creating midi')
-    }
-    writeFileSync(`assets/${n}.mid`, Buffer.from(midiBuffer.toString()))
-
-    const assetsMidi = readFileSync(`assets/${n}.mid`)
-    
-    const { cid } = await ipfs.add(midiBuffer.toString())
-    console.log('Stored in ipfs', cid)
+    createMidi(`assets/${n}.mid`, pattern)
 
     const png = text2png(pattern, {
       color: 'blue',
@@ -73,7 +63,7 @@ const createAssets = async (ipfs) => {
             "type": "image/png"
           },
           {
-            "uri": `${cid}`,
+            "uri": `<INSERT IPFS URI>`,
             "type": "audio/midi"
           }
         ],
@@ -90,9 +80,4 @@ const createAssets = async (ipfs) => {
   }
 }
 
-const initIpfs = async () => {
-  const ipfs = await IPFS.create()
-  await createAssets(ipfs)
-}
-
-initIpfs().then(() => process.exit(0)).catch(err => console.log(err))
+createAssets().then(() => process.exit(0)).catch(err => console.log(err))
