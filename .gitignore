@@ -6,6 +6,8 @@
 .pnp.js
 .env
 
+src/react-app-env.d.ts
+
 assets
 .cache
 
