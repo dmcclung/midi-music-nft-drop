@@ -25,7 +25,7 @@
     "create-assets": "rm -rf assets && mkdir assets && ts-node createAssets.ts",
     "clean-upload": "rm -rf .cache",
     "deploy-cm": "ts-node ../metaplex/js/packages/cli/src/candy-machine-cli.ts create_candy_machine --env devnet --keypair ~/.config/solana/id.json -p 1",
-    "set-drop-date": "ts-node ../metaplex/js/packages/cli/src/candy-machine-cli.ts update_candy_machine --date \"1 Dec 2021 00:12:00 GMT\" --env devnet --keypair ~/.config/solana/id.json",
+    "set-drop-date": "ts-node ../metaplex/js/packages/cli/src/candy-machine-cli.ts update_candy_machine --date \"1 Jan 2022 00:00:00 GMT\" --env devnet --keypair ~/.config/solana/id.json",
     "upload-assets": "ts-node ../metaplex/js/packages/cli/src/candy-machine-cli.ts upload ./assets --env devnet --keypair ~/.config/solana/id.json",
     "verify-assets": "ts-node ../metaplex/js/packages/cli/src/candy-machine-cli.ts verify --keypair ~/.config/solana/id.json"
   },

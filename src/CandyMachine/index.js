@@ -9,6 +9,7 @@ import {
   TOKEN_METADATA_PROGRAM_ID,
   SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
 } from './helpers';
+import CountdownTimer from '../CountdownTimer';
 
 const {
   metadata: { Metadata, MetadataProgram },
@@ -292,17 +293,18 @@ const CandyMachine = ({ walletAddress }) => {
     const itemsAvailable = candyMachine.data.itemsAvailable.toNumber();
     const itemsRedeemed = candyMachine.itemsRedeemed.toNumber();
     const itemsRemaining = itemsAvailable - itemsRedeemed;
-    const goLiveData = candyMachine.data.goLiveDate.toNumber();
+    const goLiveDate = candyMachine.data.goLiveDate.toNumber();
   
     // We will be using this later in our UI so let's generate this now
     const goLiveDateTimeString = `${new Date(
-      goLiveData * 1000
+      goLiveDate * 1000
     ).toGMTString()}`;
 
     setCandyMachineStats({
       itemsAvailable,
       itemsRedeemed,
       itemsRemaining,
+      goLiveDate,
       goLiveDateTimeString
     });
   
@@ -310,7 +312,7 @@ const CandyMachine = ({ walletAddress }) => {
       itemsAvailable,
       itemsRedeemed,
       itemsRemaining,
-      goLiveData,
+      goLiveDate,
       goLiveDateTimeString,
     });
 
@@ -364,13 +366,30 @@ const CandyMachine = ({ walletAddress }) => {
     </div>
   );
 
+  const renderDropTimer = () => {
+    const currentDate = new Date();
+    const dropDate = new Date(candyMachineStats.goLiveDate * 1000);
+  
+    // If currentDate is before dropDate, render our Countdown component
+    if (currentDate < dropDate) {
+      console.log('Before drop date!');
+      return <CountdownTimer dropDate={dropDate} />;
+    }
+  
+    // Else let's just return the current drop date
+    return <p>Drop Date: {candyMachineStats.goLiveDateTimeString}</p>;
+  };
+
   return (candyMachineStats && 
     <div className="machine-container">
-      <p>Drop Date: {candyMachineStats.goLiveDateTimeString}</p>
+      {renderDropTimer()}
       <p>Items Minted: {candyMachineStats.itemsRedeemed} / {candyMachineStats.itemsAvailable}</p>
-      <button className="cta-button mint-button" onClick={mintToken} disabled={isMinting}>
-        Mint NFT
-      </button>
+      {candyMachineStats.itemsRedeemed === candyMachineStats.itemsAvailable ? 
+        (<p className="sub-text">Sold Out 🙊</p>) :
+        (<button className="cta-button mint-button" onClick={mintToken} disabled={isMinting}>
+          Mint NFT
+        </button>)
+      }
       {isLoadingMints && <p>LOADING MINTS...</p>}
       {mints.length > 0 && renderMintedItems()}
     </div>
