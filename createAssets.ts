@@ -1,10 +1,10 @@
-import { readFileSync, writeFileSync } from 'fs'
+import { writeFileSync } from 'fs'
 import { range } from 'lodash'
 import * as scribble from 'scribbletune'
 import text2png from 'text2png'
 
-const root = 'B2';
-const scale = 'minor';
+const root = 'B2'
+const scale = 'minor'
 
 const getRandomPattern = (count = 8) => {
   let str = '[x-]R'
@@ -15,6 +15,7 @@ const getRandomPattern = (count = 8) => {
   return str
 }
 
+// TODO: Automate converting midi to ogg for browser playback
 const createMidi = (filename, pattern) => {
   const clipA = scribble.clip({
     notes: root,
@@ -44,15 +45,17 @@ const createAssets = async () => {
     const pattern = getRandomPattern()
     createMidi(`assets/${n}.mid`, pattern)
 
-    const png = text2png(pattern, {
-      color: 'blue',
-      backgroundColor: 'white'
+    const name = `Midi Audio NFT #${n}`
+
+    const png = text2png(name, {
+      color: 'white',
+      backgroundColor: 'black'
     })
 
     writeFileSync(`assets/${n}.png`, png)
 
     const json = {
-      "name": `Midi Audio NFT #${n}`,
+      "name": name,
       "symbol": "MIDI",
       "image": `${n}.png`,
       "properties.category": "audio",
@@ -64,7 +67,7 @@ const createAssets = async () => {
           },
           {
             "uri": `<INSERT IPFS URI>`,
-            "type": "audio/midi"
+            "type": "audio/ogg"
           }
         ],
         "creators": [
