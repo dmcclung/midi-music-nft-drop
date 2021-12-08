@@ -9,6 +9,7 @@ import {
   TOKEN_METADATA_PROGRAM_ID,
   SPL_ASSOCIATED_TOKEN_ACCOUNT_PROGRAM_ID,
 } from './helpers';
+
 const {
   metadata: { Metadata, MetadataProgram },
 } = programs;
@@ -26,6 +27,9 @@ const MAX_CREATOR_LEN = 32 + 1 + 1;
 
 const CandyMachine = ({ walletAddress }) => {
   const [candyMachineStats, setCandyMachineStats] = useState(null);
+  const [mints, setMints] = useState([]);
+  const [isMinting, setIsMinting] = useState(false);
+  const [isLoadingMints, setIsLoadingMints] = useState(false);
 
   // Actions
   const fetchHashTable = async (hash, metadataEnabled) => {
@@ -111,6 +115,7 @@ const CandyMachine = ({ walletAddress }) => {
 
   const mintToken = async () => {
     try {
+      setIsMinting(true);
       const mint = web3.Keypair.generate();
       const token = await getTokenWallet(
         walletAddress.publicKey,
@@ -190,10 +195,11 @@ const CandyMachine = ({ walletAddress }) => {
         txn,
         async (notification, context) => {
           if (notification.type === 'status') {
-            console.log('Receievd status event');
+            console.log('Received status event');
 
             const { result } = notification;
             if (!result.err) {
+              setIsMinting(false);
               console.log('NFT Minted!');
             }
           }
@@ -201,6 +207,7 @@ const CandyMachine = ({ walletAddress }) => {
         { commitment: 'processed' }
       );
     } catch (error) {
+      setIsMinting(false);
       let message = error.msg || 'Minting failed! Please try again!';
 
       if (!error.msg) {
@@ -290,14 +297,14 @@ const CandyMachine = ({ walletAddress }) => {
     // We will be using this later in our UI so let's generate this now
     const goLiveDateTimeString = `${new Date(
       goLiveData * 1000
-    ).toGMTString()}`
+    ).toGMTString()}`;
 
     setCandyMachineStats({
       itemsAvailable,
       itemsRedeemed,
       itemsRemaining,
       goLiveDateTimeString
-    })
+    });
   
     console.log({
       itemsAvailable,
@@ -306,19 +313,66 @@ const CandyMachine = ({ walletAddress }) => {
       goLiveData,
       goLiveDateTimeString,
     });
+
+    setIsLoadingMints(true);
+
+    const data = await fetchHashTable(
+      process.env.REACT_APP_CANDY_MACHINE_ID,
+      true
+    );
+    
+    if (data.length !== 0) {
+      for (const mint of data) {
+        // Get URI
+        const response = await fetch(mint.data.uri);
+        const metaData = await response.json();
+        console.dir(metaData);
+        console.log("Past Minted NFT", mint);
+    
+        // Get image URI
+        if (!mints.find((mint) => mint.image === metaData.image)) {
+          const mintClean = {
+            image: metaData.image,
+            audio: metaData.properties.files.find(file => file.type === 'audio/ogg')
+          }
+          setMints((prevState) => [...prevState, mintClean]);
+        }
+      }
+    }
+
+    setIsLoadingMints(false);
   };
 
   useEffect(() => {
     getCandyMachineState();
   }, []);
 
+  const renderMintedItems = () => (
+    <div className="gif-container">
+      <p className="sub-text">Minted Items ✨</p>
+      <div className="gif-grid">
+        {mints.map((mint) => (
+          <div className="gif-item" key={mint.image}>
+            <img src={mint.image} />
+            <audio controls>
+              <source src={mint.audio.uri} type={mint.audio.type}/>
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
   return (candyMachineStats && 
     <div className="machine-container">
       <p>Drop Date: {candyMachineStats.goLiveDateTimeString}</p>
       <p>Items Minted: {candyMachineStats.itemsRedeemed} / {candyMachineStats.itemsAvailable}</p>
-      <button className="cta-button mint-button" onClick={mintToken}>
+      <button className="cta-button mint-button" onClick={mintToken} disabled={isMinting}>
         Mint NFT
       </button>
+      {isLoadingMints && <p>LOADING MINTS...</p>}
+      {mints.length > 0 && renderMintedItems()}
     </div>
   );
 };
